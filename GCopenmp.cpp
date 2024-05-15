@@ -68,7 +68,7 @@ void granger(float *AR, std::vector<float> angleArray, std::vector<float> &GCval
 
 #pragma omp parallel default(shared) private(sinVal,cosVal,Qcol1,Qcol2,argmt,ratio,thread_num)
   {    
-#pragma omp for schedule(dynamic,100)
+#pragma omp for schedule(static,100)
     for(int particle=0; particle<params.numParticles; particle++)
       {
 	// initialize to zero
@@ -147,12 +147,19 @@ void granger(float *AR, std::vector<float> angleArray, std::vector<float> &GCval
 	  for(int col=0;col<numComps;col++)
 	    for(int row=0;row<numComps;row++)
 	      {
-		Tf[(particle*params.numFreqs+freq)*numComps*numComps+col*numComps+row]=
-		  tmpVector[particle*params.numFreqs*numComps*numComps+freq*numComps*numComps+col*numComps+row];
+		Tf[(particle*params.numFreqs+freq)*numComps*numComps+row*numComps+col]=
+		  -tmpVector[particle*params.numFreqs*numComps*numComps+freq*numComps*numComps+col*numComps+row];
 		if(col==row)
 		  Tf[(particle*params.numFreqs+freq)*numComps*numComps+col*numComps+row]+=std::complex<float>(1.0,0.0);
 	      }
-	
+	// Tf is formed here. Print it here, for the zeroth particle and frequnecy
+	//if(particle==0)
+	//  for(int row=0;row<numComps;row++)
+	//    {
+	//      for(int col=0;col<numComps;col++)
+	//	printf("%f+i*%f ",Tf[col*numComps+row].real(),Tf[col*numComps+row].imag());
+	//      printf("\n");
+	//    }
       
 	for(int freq=0;freq<params.numFreqs;freq++)
 	  cblas_cgemm(CblasColMajor,CblasConjTrans,CblasNoTrans,

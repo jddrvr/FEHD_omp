@@ -3,7 +3,7 @@
 #include "FEHD.h"
 #include "dataContainers.h"
 #include "mkAR.h"
-#include "mkARGPU.h"
+//#include "mkARGPU.h"
 #include <algorithm>
 #include <math.h>
 #include <fstream>
@@ -152,6 +152,9 @@ void runFEHDstep(std::vector<float> &bestAngle, matrix &L, dataList dataArray ,p
   for(int indx=0;indx<params.numParticles*(numComps-1);indx++)
     angleArray.push_back((float)(rand()%314-157)/100.0f);
 
+  for(int indx=0;indx<numComps-1;indx++)
+    angleArray[indx]=0;
+  
   ARmodel A;
   dataList residuals;
 
@@ -215,11 +218,12 @@ void runFEHDstep(std::vector<float> &bestAngle, matrix &L, dataList dataArray ,p
   int num_threads=omp_get_max_threads();
   std::vector<std::complex<float>> work(num_threads*(numComps-1)*(numComps-1));
   std::vector<float> rwork(num_threads*(3*(numComps-1)-2));
-  // Params contains the laglist, which is why it is absent her
+ 
   granger(AR.data(),angleArray,GCvals,params,numComps,Q,rotatedModels.data(),workArray.data(),Tf.data(),Swhole.data(),tmp.data(),Spartial.data(),
 	  d_wholeSpec.data(),
 	  det_whole.data(),det_partial.data(),eigValsWhole.data(),eigValsPartial.data(),modelTranspose.data(),tmpVector.data(),
 	  work.data(),rwork.data());
+ 
   
   
   // exit here to test if this worked
