@@ -59,7 +59,6 @@ int main(int argc, char** argv)
   removeMultipleComponents(PC,compsToRemove);
 
   // Run FEHD on the principal components.
-
   
   runFEHD(PC, LmatTrimmed, params);
 

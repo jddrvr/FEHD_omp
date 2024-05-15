@@ -255,7 +255,7 @@ void writeOutput(float *transMat,paramContainer params)
   
   // See if the output folder exists already.
   
-  std::cout << params.outfolder << std::endl;
+  //std::cout << params.outfolder << std::endl;
   
   //fs::current_path(fs::temp_directory_path());
   

@@ -133,7 +133,7 @@ void runFEHD(dataList dataArray, std::vector<float> &Lmat, paramContainer params
 
       Lmat = newTrans;
     }
-  printf("Got here 2 \n");
+  
   return;
 }
 

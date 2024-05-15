@@ -66,9 +66,9 @@ void granger(float *AR, std::vector<float> angleArray, std::vector<float> &GCval
   int lwork = (numComps-1)*(numComps-1);
   int rsize = 3*(numComps-1)-2;
 
-#pragma omp parallel default(shared) private(sinVal,cosVal,Qcol1,Qcol2,argmt,ratio,thread_num)
+#pragma omp parallel default(shared) private(sinVal,cosVal,Qcol1,Qcol2,argmt,ratio,thread_num) //num_threads(24)
   {    
-#pragma omp for schedule(static,100)
+#pragma omp for schedule(dynamic,10) 
     for(int particle=0; particle<params.numParticles; particle++)
       {
 	// initialize to zero
@@ -135,7 +135,8 @@ void granger(float *AR, std::vector<float> angleArray, std::vector<float> &GCval
 		argmt = std::exp(std::complex<float>(0,argmtBASE*((float)(params.lagList[lag]))*freqVal[freq]));
 		
 		for(int col=0;col<numComps;col++)
-		  cblas_caxpy(numComps,&argmt,modelTranspose+particle*numComps+lag*params.numParticles*numComps*numComps+col*params.numParticles*numComps,1,
+		  cblas_caxpy(numComps,&argmt,modelTranspose+particle*numComps+lag*params.numParticles*numComps*numComps+
+			col*params.numParticles*numComps,1,
 			      tmpVector+particle*params.numFreqs*numComps*numComps+freq*numComps*numComps+col*numComps,1);
 	    
 	      }
@@ -191,10 +192,7 @@ void granger(float *AR, std::vector<float> angleArray, std::vector<float> &GCval
 		      Swhole+particle*params.numFreqs*numComps*numComps+freq*numComps*numComps+numComps-1,numComps,
 		      &betaC2,
 		      tmp+particle*params.numFreqs*numComps*numComps+freq*numComps*numComps,numComps);
-	if(particle==0)
-	  {
-	    //printf("tmp corner %f \n",tmp[0].real());
-	  }
+
 	std::copy(tmp+(particle*params.numFreqs)*numComps*numComps,
 		  tmp+(particle*params.numFreqs+params.numFreqs)*numComps*numComps,
 		  Swhole+(particle*params.numFreqs)*numComps*numComps);
@@ -239,33 +237,6 @@ void granger(float *AR, std::vector<float> angleArray, std::vector<float> &GCval
 	
 	thread_num=omp_get_thread_num();
 		
-	/*if(particle==0)
-	  {
-	    for(int row=0;row<numComps-1;row++)
-	      {
-		for(int col=numComps;col<2*numComps-1;col++)
-		  printf("%f + i %f ",Swhole[col*(numComps)+row].real(),Swhole[col*numComps+row].imag());
-		printf("\n");
-	      }
-	    for(int row=0;row<numComps-1;row++)
-	      {
-		for(int col=numComps-1;col<2*(numComps-1);col++)
-		  printf("%f + i %f ",d_wholeSpec[col*(numComps-1)+row].real(),d_wholeSpec[col*(numComps-1)+row].imag());
-		printf("\n");
-	      } // Skipping frequencies. Why?
-	  }
-	if(particle==0)
-	  {
-	    for(int row=0;row<numComps-1;row++)
-	      {
-		for(int col=numComps-1;col<2*(numComps-1);col++)
-		  printf("%f + i %f ",Spartial[col*(numComps-1)+row].real(),Spartial[col*(numComps-1)+row].imag());
-		printf("\n");
-	      }
-	      }*/
-
-
-	
 	for(int freq=0;freq<params.numFreqs;freq++)      
 	  {
 	    auto info = LAPACKE_cheev_work(LAPACK_COL_MAJOR,'N','U',numComps-1,d_wholeSpec+
@@ -274,13 +245,6 @@ void granger(float *AR, std::vector<float> angleArray, std::vector<float> &GCval
 					   numComps-1,
 					   eigValsWhole+particle*params.numFreqs*(numComps-1)+freq*(numComps-1),
 					   work+thread_num*lwork,lwork,rwork+thread_num*rsize);
-	    //if(particle == 0)
-	    //  {
-	    //	printf("%i \n",info);
-	    //	printf("frequency index = %i \n",freq);
-	    //	for(int comp=0;comp<(numComps-1);comp++)
-	    //	  printf("eig %f \n",eigValsWhole[comp+freq*(numComps-1)]);
-	    //  }
 	    
 	    LAPACKE_cheev_work(LAPACK_COL_MAJOR,'N','U',numComps-1,Spartial+
 	    		  particle*params.numFreqs*(numComps-1)*
@@ -289,9 +253,7 @@ void granger(float *AR, std::vector<float> angleArray, std::vector<float> &GCval
 	    		  eigValsPartial+particle*params.numFreqs*(numComps-1)+freq*(numComps-1),
 			  work+thread_num*lwork,lwork,rwork+thread_num*rsize);
 	  }
-
-	
-	
+		
 	for(int freq=0;freq<params.numFreqs;freq++)
 	  {
 	    det_partial[particle*params.numFreqs+freq]=1.0;
@@ -307,24 +269,19 @@ void granger(float *AR, std::vector<float> angleArray, std::vector<float> &GCval
 			       freq*(numComps-1)+comp];
 	      }
 	  }
-	if(particle==0)
-	  {
-	    //printf("whole detrminant %f \n",det_whole[1]);
-	    //printf("partial determinent %f \n",det_partial[1]);
-	  }
 
 	GCvals[particle] = 0.0;
 	for(int freq=0;freq<params.numFreqs;freq++)
 	  {
 	    ratio = det_partial[particle*params.numFreqs+freq]/det_whole[particle*params.numFreqs+freq];
-	  if(ratio > 1.0f)
+	    //if(ratio > 1.0f)
 	    GCvals[particle] = GCvals[particle]+logf(ratio);
-	  else if(ratio < 0.9f)
-	    {
-	      printf("determinants are real close to zero, and the ratio is off. \n");
-	      printf("idx: %i, upper determinant: %e, lower determinant: %e \n",particle*params.numFreqs+freq,
-		     det_partial[particle*params.numFreqs+freq], det_whole[particle*params.numFreqs+freq]);
-	    }
+	    //else if(ratio < 0.9f)
+	    //{
+	    //  printf("determinants are real close to zero, and the ratio is off. \n");
+	    //  printf("idx: %i, upper determinant: %e, lower determinant: %e \n",particle*params.numFreqs+freq,
+	    //	     det_partial[particle*params.numFreqs+freq], det_whole[particle*params.numFreqs+freq]);
+	    //}
 	  }      
       }
   }
