@@ -232,7 +232,8 @@ void runFEHDstep(std::vector<float> &bestAngle, matrix &L, dataList dataArray ,p
   // exit here to test if this worked
 
  
-  //printf("%i \n", num_threads); std::vector<float> candidates(4,0);
+  //printf("%i \n", num_threads);
+  std::vector<float> candidates(4,0);
   int minIndx;
   for(int iter=0;iter<numIts;iter++)
     {
