@@ -175,8 +175,6 @@ void runFEHDstep(std::vector<float> &bestAngle, matrix &L, dataList dataArray ,p
     for(int row=0;row<numComps;row++)
       for(int col=0;col<numComps;col++)
 	AR[lag*numComps*numComps+col*numComps+row] = A.lagMatrices[lag].elements[col*numComps+row];
-
-  
   
   // Number of iterations
   int numIts = 50;
@@ -201,6 +199,11 @@ void runFEHDstep(std::vector<float> &bestAngle, matrix &L, dataList dataArray ,p
   // I want to declare all of the arrays here, before entering for the first time.
   // This might make using the recycler difficult, as it will require a dynamically
   // sized version of all of this. NOT TRUE. Just set the particles parameter, it will ignore extra array.
+
+  // Create a structure that contains all of the following vectors
+  //GCarrays GC;
+  //sizeGCArrays(GC);
+
   std::vector<float> Q(numComps*numComps*params.numParticles);
   std::vector<std::complex<float>> Swhole(numComps*numComps*params.numFreqs*params.numParticles);
   std::vector<std::complex<float>> tmp(numComps*numComps*params.numFreqs*params.numParticles);
@@ -219,52 +222,52 @@ void runFEHDstep(std::vector<float> &bestAngle, matrix &L, dataList dataArray ,p
   std::vector<std::complex<float>> work(num_threads*(numComps-1)*(numComps-1));
   std::vector<float> rwork(num_threads*(3*(numComps-1)-2));
  
-  granger(AR.data(),angleArray,GCvals,params,numComps,Q,rotatedModels.data(),workArray.data(),Tf.data(),Swhole.data(),tmp.data(),Spartial.data(),
-	  d_wholeSpec.data(),
-	  det_whole.data(),det_partial.data(),eigValsWhole.data(),eigValsPartial.data(),modelTranspose.data(),tmpVector.data(),
-	  work.data(),rwork.data());
+  granger(AR.data(),angleArray,GCvals,params,numComps,Q,rotatedModels.data(),workArray.data(),Tf.data(),
+	  Swhole.data(),tmp.data(),Spartial.data(),d_wholeSpec.data(),det_whole.data(),det_partial.data(),
+	  eigValsWhole.data(),eigValsPartial.data(),modelTranspose.data(),tmpVector.data(),work.data(),
+	  rwork.data());
  
   
   
   // exit here to test if this worked
 
  
-  //printf("%i \n", num_threads);
-  std::vector<float> candidates(4,0);
+  //printf("%i \n", num_threads); std::vector<float> candidates(4,0);
   int minIndx;
   for(int iter=0;iter<numIts;iter++)
     {
-      compGradient(AR.data(), gradient, angleArray, GCvals, params, numComps, Q, rotatedModels.data(),
-		   workArray.data(), Tf.data(), Swhole.data(), tmp.data(), Spartial.data(), d_wholeSpec.data(), det_whole.data(), det_partial.data(),
-		   eigValsWhole.data(), eigValsPartial.data(), modelTranspose.data(), tmpVector.data(), work.data(),rwork.data());
-      //exit(0);
+      compGradient(AR.data(), gradient, angleArray, GCvals, params,
+		   numComps, Q, rotatedModels.data(), workArray.data(), Tf.data(),
+		   Swhole.data(), tmp.data(), Spartial.data(), d_wholeSpec.data(),
+		   det_whole.data(), det_partial.data(), eigValsWhole.data(),
+		   eigValsPartial.data(), modelTranspose.data(), tmpVector.data(),
+		   work.data(),rwork.data());
+      
       angleArray1 = angleArray;
       angleArray2 = angleArray;
       angleArray3 = angleArray;
-      cblas_saxpy(params.numParticles*(numComps-1), -h[0], gradient.data(), 1, angleArray1.data(),1);
-      cblas_saxpy(params.numParticles*(numComps-1), -h[1], gradient.data(), 1, angleArray2.data(),1);
-      cblas_saxpy(params.numParticles*(numComps-1), -h[2], gradient.data(), 1, angleArray3.data(),1);
-
+      cblas_saxpy(params.numParticles*(numComps-1),-h[0],gradient.data(),1,angleArray1.data(),1);
+      cblas_saxpy(params.numParticles*(numComps-1),-h[1],gradient.data(),1,angleArray2.data(),1);
+      cblas_saxpy(params.numParticles*(numComps-1),-h[2],gradient.data(),1,angleArray3.data(),1);
+      
       // Evaluate GC for each of the shifted angle arrays
-      granger(AR.data(),angleArray1,GCvals1,params,numComps,Q,rotatedModels.data(),workArray.data(),Tf.data(),Swhole.data(),tmp.data(),Spartial.data(),
-	      d_wholeSpec.data(),
-	      det_whole.data(),det_partial.data(),eigValsWhole.data(),eigValsPartial.data(),
-	      modelTranspose.data(),tmpVector.data(),work.data(),rwork.data());
-      granger(AR.data(),angleArray2,GCvals2,params,numComps,Q,rotatedModels.data(),workArray.data(),Tf.data(),Swhole.data(),tmp.data(),Spartial.data(),
-	      d_wholeSpec.data(),
-	      det_whole.data(),det_partial.data(),eigValsWhole.data(),eigValsPartial.data(),
-	      modelTranspose.data(),tmpVector.data(),work.data(),rwork.data());
-      granger(AR.data(),angleArray3,GCvals3,params,numComps,Q,rotatedModels.data(),workArray.data(),Tf.data(),Swhole.data(),tmp.data(),Spartial.data(),
-	      d_wholeSpec.data(),
-	      det_whole.data(),det_partial.data(),eigValsWhole.data(),eigValsPartial.data(),
-	      modelTranspose.data(),tmpVector.data(),work.data(),rwork.data());
-
+      granger(AR.data(),angleArray1,GCvals1,params,numComps,Q,rotatedModels.data(),
+	      workArray.data(),Tf.data(),Swhole.data(),tmp.data(),Spartial.data(),
+	      d_wholeSpec.data(),det_whole.data(),det_partial.data(),eigValsWhole.data(),
+	      eigValsPartial.data(),modelTranspose.data(),tmpVector.data(),work.data(),rwork.data());
+      granger(AR.data(),angleArray2,GCvals2,params,numComps,Q,rotatedModels.data(),
+	      workArray.data(),Tf.data(),Swhole.data(),tmp.data(),Spartial.data(),
+	      d_wholeSpec.data(),det_whole.data(),det_partial.data(),eigValsWhole.data(),
+	      eigValsPartial.data(),modelTranspose.data(),tmpVector.data(),work.data(),rwork.data());
+      granger(AR.data(),angleArray3,GCvals3,params,numComps,Q,rotatedModels.data(),
+	      workArray.data(),Tf.data(),Swhole.data(),tmp.data(),Spartial.data(),
+	      d_wholeSpec.data(),det_whole.data(),det_partial.data(),eigValsWhole.data(),
+	      eigValsPartial.data(),modelTranspose.data(),tmpVector.data(),work.data(),rwork.data());
       
       // This loop determines the minimum of four values for each particle.
       // This loop can be made much more elegant. I don't know that it will work any better, but this is just ugly.
       for(int particle=0;particle<params.numParticles;particle++)
 	{
-
 	  candidates[0] = GCvals[particle];
 	  candidates[1] = GCvals1[particle];
 	  candidates[2] = GCvals2[particle];
@@ -275,17 +278,20 @@ void runFEHDstep(std::vector<float> &bestAngle, matrix &L, dataList dataArray ,p
 	  if(minIndx == 1)
 	    {
 	      GCvals[particle] = GCvals1[particle];
-	      std::copy(angleArray1.data()+particle*(numComps-1),angleArray1.data()+particle*(numComps-1)+numComps-1,angleArray.data()+particle*(numComps-1));
+	      std::copy(angleArray1.data()+particle*(numComps-1),angleArray1.data()+
+			particle*(numComps-1)+numComps-1,angleArray.data()+particle*(numComps-1));
 	    }
 	  if(minIndx == 2)
 	    {
 	      GCvals[particle] = GCvals2[particle];
-	      std::copy(angleArray2.data()+particle*(numComps-1),angleArray2.data()+particle*(numComps-1)+numComps-1,angleArray.data()+particle*(numComps-1));
+	      std::copy(angleArray2.data()+particle*(numComps-1),angleArray2.data()+
+			particle*(numComps-1)+numComps-1,angleArray.data()+particle*(numComps-1));
 	    }
 	  if(minIndx == 3)
 	    {
 	      GCvals[particle] = GCvals3[particle];
-	      std::copy(angleArray3.data()+particle*(numComps-1),angleArray3.data()+particle*(numComps-1)+numComps-1,angleArray.data()+particle*(numComps-1));
+	      std::copy(angleArray3.data()+particle*(numComps-1),angleArray3.data()+
+			particle*(numComps-1)+numComps-1,angleArray.data()+particle*(numComps-1));
 	    }
 	}
       
@@ -302,7 +308,8 @@ void runFEHDstep(std::vector<float> &bestAngle, matrix &L, dataList dataArray ,p
 
   //printf("%li \n",indexVal);
 
-  std::copy(angleArray.data()+indexVal*(numComps-1),angleArray.data()+indexVal*(numComps-1)+numComps-1,bestAngle.begin());
+  std::copy(angleArray.data()+indexVal*(numComps-1),angleArray.data()+indexVal*(numComps-1)+
+	    numComps-1,bestAngle.begin());
 
   return;
  
