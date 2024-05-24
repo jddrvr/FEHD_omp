@@ -59,16 +59,18 @@ void granger(float *AR, std::vector<float> angleArray, std::vector<float> &GCval
 
   float ratio;
 
-  std::fill(Q.begin(),Q.end(),0.0f);
+  std::fill(Q.begin(),Q.end(),0.0f); // This does need to be done here.
 
   int thread_num;
 
-  int lwork = (numComps-1)*(numComps-1);
+  int lwork = (numComps-1)*(numComps-1); 
   int rsize = 3*(numComps-1)-2;
 
 #pragma omp parallel default(shared) private(sinVal,cosVal,Qcol1,Qcol2,argmt,ratio,thread_num) //num_threads(24)
   {    
-#pragma omp for schedule(dynamic,10) 
+#pragma omp for schedule(dynamic,50) // The optimal default chunksize of this might vary widely
+                                     // from machine to machine, and on the number of
+                                     // particles you chose. 
     for(int particle=0; particle<params.numParticles; particle++)
       {
 	// initialize to zero

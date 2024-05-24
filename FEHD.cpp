@@ -30,15 +30,13 @@ void compGradient(float *AR, std::vector<float> &gradient, std::vector<float> an
   
   const int numVars = numComps-1;
   const float  h_val = 0.001f; // This is for the gradient spacing.
-
   
   std::vector<float> angle(angleArray); // Copies the value. At this time I am not sure why.
   std::vector<float> GCvalsUTIL(params.numParticles,0); // Output at each angle perturbation.
   // The gradient is computed by a difference in each angle of rotation.
-  // 
+
   for(int angleArrayIndex=0;angleArrayIndex<numVars;angleArrayIndex++)
     {
-      
       for(int particle=0;particle<params.numParticles;particle++)
 	{
 	  angle[particle*numVars+angleArrayIndex] += h_val;
@@ -53,10 +51,7 @@ void compGradient(float *AR, std::vector<float> &gradient, std::vector<float> an
 	{
 	  gradient[particle*numVars+angleArrayIndex] = (GCvalsUTIL[particle]-// This is saxpy
 							GCvals[particle])/h_val;
-
-	  
 	  angle[particle*numVars+angleArrayIndex] -= h_val;
-	  
 	}      
     }  
 }
@@ -219,18 +214,14 @@ void runFEHDstep(std::vector<float> &bestAngle, matrix &L, dataList dataArray ,p
   std::vector<float> det_partial(params.numParticles*params.numFreqs,1);
   std::vector<float> det_whole(params.numParticles*params.numFreqs,1);
   int num_threads=omp_get_max_threads();
-  std::vector<std::complex<float>> work(num_threads*(numComps-1)*(numComps-1));
+  int lwork=8*(numComps-1)*(numComps-1);
+  std::vector<std::complex<float>> work(num_threads*lwork);
   std::vector<float> rwork(num_threads*(3*(numComps-1)-2));
  
   granger(AR.data(),angleArray,GCvals,params,numComps,Q,rotatedModels.data(),workArray.data(),Tf.data(),
 	  Swhole.data(),tmp.data(),Spartial.data(),d_wholeSpec.data(),det_whole.data(),det_partial.data(),
 	  eigValsWhole.data(),eigValsPartial.data(),modelTranspose.data(),tmpVector.data(),work.data(),
 	  rwork.data());
- 
-  
-  
-  // exit here to test if this worked
-
  
   //printf("%i \n", num_threads);
   std::vector<float> candidates(4,0);
@@ -358,3 +349,5 @@ void singleQ(std::vector<float> &Q, std::vector<float> angle)
   return;
   
 }
+
+  
