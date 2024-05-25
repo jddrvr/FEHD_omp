@@ -34,6 +34,7 @@ struct paramContainer
   int freqHiFLAG;
   int numFreqs;
   int numFreqsFLAG;
+  bool verbose;
   std::vector<int> lagList;
 } ;
 
