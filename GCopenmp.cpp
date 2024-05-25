@@ -1,6 +1,6 @@
 #include "GCopenmp.h"
 #include "dataContainers.h"
-#include "kernelsCPU.h"
+//#include "kernelsCPU.h"
 #include "utility.h"
 #include <cblas.h>
 #include <complex>
