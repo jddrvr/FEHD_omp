@@ -3,13 +3,11 @@
 #include "FEHD.h"
 #include "dataContainers.h"
 #include "mkAR.h"
-//#include "mkARGPU.h"
 #include <algorithm>
 #include <math.h>
 #include <fstream>
 #include "GCopenmp.h"
 #include "kernelsCPU.h"
-//#include "GC.h"
 #include "utility.h"
 #include <chrono>
 #include <cblas.h>
@@ -199,6 +197,8 @@ void runFEHDstep(std::vector<float> &bestAngle, matrix &L, dataList dataArray ,p
   //GCarrays GC;
   //sizeGCArrays(GC);
 
+  // Determine system memory here.
+    
   std::vector<float> Q(numComps*numComps*params.numParticles);
   std::vector<std::complex<float>> Swhole(numComps*numComps*params.numFreqs*params.numParticles);
   std::vector<std::complex<float>> tmp(numComps*numComps*params.numFreqs*params.numParticles);
