@@ -95,15 +95,20 @@ void mkAR(dataList dataArray, std::vector<int> lagList, ARmodel &A, dataList &R)
     }
 
   // Compute the residuals.
-  float *modelvals = new float[numComps*(epochPts-numLags)*numEpochs];
-  cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
-	      numComps,kval,mval,alpha,RHScov,mval,LHSvecBAK.data(),mval,beta,modelvals,numComps);
-  const float alphaneg = -1.0f;
-  int mval2 = RHS.elements.size();
-  cblas_saxpy(mval2, alphaneg, modelvals, 1, RHSvecBAK.data(), 1);
+  //float *modelvals = new float[numComps*(epochPts-numLags)*numEpochs];
+  //cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
+  //	      numComps,kval,mval,alpha,RHScov,mval,LHSvecBAK.data(),mval,beta,modelvals,numComps);
+  const float alphaRes=-1.0;
+  const float betaRes=1.0;
+
+  cblas_sgemm(CblasColMajor,CblasTrans, CblasNoTrans,
+	      numComps,kval,mval,alphaRes,RHScov,mval,LHSvecBAK.data(),mval,betaRes,RHSvecBAK.data(),numComps);
+  //const float alphaneg = -1.0f;
+  //int mval2 = RHS.elements.size();
+  //cblas_saxpy(mval2, alphaneg, modelvals, 1, RHSvecBAK.data(), 1); // I think this is done right, just long.
   convertRawArrayToDataList(RHSvecBAK.data(), R, numComps, epochPts-maxLag, numEpochs);
   
-  delete [] modelvals;
+  //  delete [] modelvals;
   delete [] RHScov;
   delete [] LHScov;
   
