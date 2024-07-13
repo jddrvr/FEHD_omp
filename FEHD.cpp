@@ -198,6 +198,7 @@ void runFEHDstep(std::vector<float> &bestAngle, matrix &L, dataList dataArray ,p
   //sizeGCArrays(GC);
 
   // Determine system memory here.
+  
     
   std::vector<float> Q(numComps*numComps*params.numParticles);
   std::vector<std::complex<float>> Swhole(numComps*numComps*params.numFreqs*params.numParticles);
